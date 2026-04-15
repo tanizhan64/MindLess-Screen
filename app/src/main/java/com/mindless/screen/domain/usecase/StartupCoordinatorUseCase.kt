@@ -3,6 +3,8 @@ package com.mindless.screen.domain.usecase
 import com.mindless.screen.domain.model.PermissionCapability
 import com.mindless.screen.domain.model.StartupState
 import com.mindless.screen.domain.repository.PermissionRepository
+import com.mindless.screen.domain.repository.SubscriptionRepository
+import com.mindless.screen.domain.repository.TrackingRepository
 
 class StartupCoordinatorUseCase(
     private val permissionRepository: PermissionRepository,
@@ -14,21 +16,17 @@ class StartupCoordinatorUseCase(
     operator fun invoke(): StartupState {
         val canTrackUsage = permissionRepository.isGranted(PermissionCapability.USAGE_ACCESS)
         val isPremium = subscriptionRepository.isPremium()
-        val minutesSinceLastAggregation = trackingRepository.minutesSinceLastAggregation()
+        val shouldTriggerBackgroundAggregation =
+            if (!canTrackUsage) {
+                false
+            } else {
+                trackingRepository.minutesSinceLastAggregation() > staleThresholdMinutes
+            }
 
         return StartupState(
             canTrackUsage = canTrackUsage,
             isPremium = isPremium,
-            shouldTriggerBackgroundAggregation =
-                canTrackUsage && minutesSinceLastAggregation > staleThresholdMinutes
+            shouldTriggerBackgroundAggregation = shouldTriggerBackgroundAggregation
         )
     }
-}
-
-interface SubscriptionRepository {
-    fun isPremium(): Boolean
-}
-
-interface TrackingRepository {
-    fun minutesSinceLastAggregation(): Long
 }
