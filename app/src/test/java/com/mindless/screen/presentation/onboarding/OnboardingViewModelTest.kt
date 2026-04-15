@@ -25,6 +25,40 @@ class OnboardingViewModelTest {
         assertEquals(PermissionState.UsageAccessRequired, viewModel.uiState.value)
     }
 
+    @Test
+    fun bootCapabilityDenied_setsNotificationsOptionalState() {
+        val permissionRepository = FakePermissionRepository(
+            grants = mapOf(
+                PermissionCapability.USAGE_ACCESS to true,
+                PermissionCapability.ACCESSIBILITY_SERVICE to true,
+                PermissionCapability.POST_NOTIFICATIONS to true,
+                PermissionCapability.RECEIVE_BOOT_COMPLETED to false
+            )
+        )
+        val viewModel = OnboardingViewModel(permissionRepository)
+
+        viewModel.refresh()
+
+        assertEquals(PermissionState.NotificationsOptional, viewModel.uiState.value)
+    }
+
+    @Test
+    fun accessibilityDenied_takesPriorityOverBootCapability() {
+        val permissionRepository = FakePermissionRepository(
+            grants = mapOf(
+                PermissionCapability.USAGE_ACCESS to true,
+                PermissionCapability.ACCESSIBILITY_SERVICE to false,
+                PermissionCapability.POST_NOTIFICATIONS to true,
+                PermissionCapability.RECEIVE_BOOT_COMPLETED to false
+            )
+        )
+        val viewModel = OnboardingViewModel(permissionRepository)
+
+        viewModel.refresh()
+
+        assertEquals(PermissionState.AccessibilityRequired, viewModel.uiState.value)
+    }
+
     private class FakePermissionRepository(
         private val grants: Map<PermissionCapability, Boolean>
     ) : PermissionRepository {

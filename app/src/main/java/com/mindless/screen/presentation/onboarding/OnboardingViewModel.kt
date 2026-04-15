@@ -15,19 +15,15 @@ class OnboardingViewModel(
     val uiState: StateFlow<PermissionState> = _uiState.asStateFlow()
 
     fun refresh() {
+        val hasUsageAccess = permissionRepository.isGranted(PermissionCapability.USAGE_ACCESS)
+        val hasAccessibilityService = permissionRepository.isGranted(PermissionCapability.ACCESSIBILITY_SERVICE)
+        val hasPostNotifications = permissionRepository.isGranted(PermissionCapability.POST_NOTIFICATIONS)
+        val hasReceiveBootCompleted = permissionRepository.isGranted(PermissionCapability.RECEIVE_BOOT_COMPLETED)
+
         _uiState.value = when {
-            !permissionRepository.isGranted(PermissionCapability.USAGE_ACCESS) -> {
-                PermissionState.UsageAccessRequired
-            }
-
-            !permissionRepository.isGranted(PermissionCapability.ACCESSIBILITY_SERVICE) -> {
-                PermissionState.AccessibilityRequired
-            }
-
-            !permissionRepository.isGranted(PermissionCapability.POST_NOTIFICATIONS) -> {
-                PermissionState.NotificationsOptional
-            }
-
+            !hasUsageAccess -> PermissionState.UsageAccessRequired
+            !hasAccessibilityService -> PermissionState.AccessibilityRequired
+            !hasPostNotifications || !hasReceiveBootCompleted -> PermissionState.NotificationsOptional
             else -> PermissionState.Ready
         }
     }
