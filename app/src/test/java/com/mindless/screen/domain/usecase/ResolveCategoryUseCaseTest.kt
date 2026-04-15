@@ -20,4 +20,20 @@ class ResolveCategoryUseCaseTest {
         assertEquals("productivity", resolved.value)
         assertEquals(CategorySource.USER_OVERRIDE, resolved.source)
     }
+
+    @Test
+    fun fallsBackToDefaultToolsWithBuiltInSource_whenInputsAreAbsent() {
+        val useCase = ResolveCategoryUseCase()
+
+        val resolved = useCase(
+            manualOverride = null,
+            builtIn = null,
+            playStore = null,
+            playStoreEnabled = true,
+            defaultTools = "tools"
+        )
+
+        assertEquals("tools", resolved.value)
+        assertEquals(CategorySource.BUILT_IN, resolved.source)
+    }
 }

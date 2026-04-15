@@ -7,12 +7,15 @@ class DetectSessionUseCase(
     private val inactivityTimeoutMillis: Long = 30_000
 ) {
     operator fun invoke(events: List<SessionEvent>): SessionWindow {
-        val startEvent = events.firstOrNull { it is SessionEvent.ScreenOn }
-            ?: error("Session requires a ScreenOn event")
+        val startIndex = events.indexOfFirst { it is SessionEvent.ScreenOn }
+        if (startIndex == -1) {
+            error("Session requires a ScreenOn event")
+        }
 
+        val startEvent = events[startIndex] as SessionEvent.ScreenOn
         var lastActiveMillis = startEvent.timestampMillis
 
-        for (event in events) {
+        for (event in events.drop(startIndex)) {
             when (event) {
                 is SessionEvent.ScreenOn,
                 is SessionEvent.ForegroundApp -> {
