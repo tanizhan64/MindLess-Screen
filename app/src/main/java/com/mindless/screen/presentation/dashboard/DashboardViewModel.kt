@@ -1,29 +1,17 @@
 package com.mindless.screen.presentation.dashboard
 
-import com.mindless.screen.domain.model.StartupState
-import com.mindless.screen.domain.usecase.StartupCoordinatorUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class DashboardViewModel(
-    private val startupCoordinatorUseCase: StartupCoordinatorUseCase
-) {
+data class DashboardUiState(
+    val screenTimeTodayLabel: String = "Screen Time Today",
+    val addictionScoreLabel: String = "Addiction Score",
+    val unlockCountLabel: String = "Unlock Count"
+)
 
-    private val _startupState = MutableStateFlow(
-        StartupState(
-            canTrackUsage = false,
-            isPremium = false,
-            shouldTriggerBackgroundAggregation = false
-        )
-    )
-    val startupState: StateFlow<StartupState> = _startupState.asStateFlow()
+class DashboardViewModel {
 
-    init {
-        evaluateStartup()
-    }
-
-    fun evaluateStartup() {
-        _startupState.value = startupCoordinatorUseCase()
-    }
+    private val _uiState = MutableStateFlow(DashboardUiState())
+    val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 }
