@@ -2,6 +2,7 @@ package com.mindless.screen
 
 import androidx.compose.ui.test.assertExists
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import org.junit.Rule
 import org.junit.Test
@@ -13,6 +14,7 @@ class DashboardUiTest {
 
     @Test
     fun showsTopStatsCard() {
+        composeTestRule.onNodeWithTag("dashboard_stats_card").assertExists()
         composeTestRule.onNodeWithText("Screen Time Today").assertExists()
         composeTestRule.onNodeWithText("Addiction Score").assertExists()
         composeTestRule.onNodeWithText("Unlock Count").assertExists()

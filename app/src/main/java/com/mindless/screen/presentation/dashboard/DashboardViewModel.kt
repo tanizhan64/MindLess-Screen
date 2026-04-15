@@ -1,5 +1,6 @@
 package com.mindless.screen.presentation.dashboard
 
+import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -10,7 +11,7 @@ data class DashboardUiState(
     val unlockCountLabel: String = "Unlock Count"
 )
 
-class DashboardViewModel {
+class DashboardViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()

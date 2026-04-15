@@ -3,7 +3,7 @@ package com.mindless.screen.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -17,7 +17,7 @@ private const val DAILY_REPORT_ROUTE = "daily_report"
 @Composable
 fun MindLessNavHost() {
     val navController = rememberNavController()
-    val viewModel = remember { DashboardViewModel() }
+    val viewModel: DashboardViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
 
     NavHost(
