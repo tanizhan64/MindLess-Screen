@@ -32,8 +32,11 @@ fun OnboardingScreen(
 
         when (state) {
             PermissionState.UsageAccessRequired -> {
-                Button(onClick = { }) {
-                    Text(text = "Grant usage access")
+                Button(
+                    onClick = { },
+                    enabled = false
+                ) {
+                    Text(text = "Enable Usage Access")
                 }
             }
 

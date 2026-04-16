@@ -53,7 +53,7 @@ class DetectSessionUseCaseTest {
         )
 
         assertEquals(1_000, sessionWindow.startEpochMillis)
-        assertEquals(2_500, sessionWindow.endEpochMillis)
+        assertEquals(2_500L, sessionWindow.endEpochMillis)
         assertEquals(SessionWindow.EndReason.SCREEN_OFF, sessionWindow.endReason)
     }
 }

@@ -7,7 +7,9 @@ import org.junit.Test
 class BrandingResourceTest {
 
     @Test
-    fun launcherForegroundDrawableId_isNonZero() {
+    fun launcherBrandingResources_arePresent() {
         assertNotEquals(0, R.drawable.ic_launcher_foreground)
+        assertNotEquals(0, R.mipmap.ic_launcher)
+        assertNotEquals(0, R.mipmap.ic_launcher_round)
     }
 }

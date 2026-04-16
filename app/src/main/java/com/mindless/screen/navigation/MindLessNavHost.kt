@@ -9,24 +9,37 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.mindless.screen.presentation.dashboard.DashboardScreen
 import com.mindless.screen.presentation.dashboard.DashboardViewModel
+import com.mindless.screen.presentation.onboarding.OnboardingScreen
+import com.mindless.screen.presentation.onboarding.OnboardingViewModel
 import com.mindless.screen.presentation.reports.DailyReportScreen
 
+private const val ONBOARDING_ROUTE = "onboarding"
 private const val DASHBOARD_ROUTE = "dashboard"
 private const val DAILY_REPORT_ROUTE = "daily_report"
 
 @Composable
-fun MindLessNavHost() {
+fun MindLessNavHost(
+    startInOnboarding: Boolean = false,
+    onboardingViewModel: OnboardingViewModel
+) {
     val navController = rememberNavController()
-    val viewModel: DashboardViewModel = viewModel()
-    val uiState by viewModel.uiState.collectAsState()
+    val dashboardViewModel: DashboardViewModel = viewModel()
+    val dashboardUiState by dashboardViewModel.uiState.collectAsState()
+    val startDestination = if (startInOnboarding) ONBOARDING_ROUTE else DASHBOARD_ROUTE
 
     NavHost(
         navController = navController,
-        startDestination = DASHBOARD_ROUTE
+        startDestination = startDestination
     ) {
+        composable(route = ONBOARDING_ROUTE) {
+            OnboardingScreen(
+                viewModel = onboardingViewModel
+            )
+        }
+
         composable(route = DASHBOARD_ROUTE) {
             DashboardScreen(
-                uiState = uiState,
+                uiState = dashboardUiState,
                 onViewReportsClick = { navController.navigate(DAILY_REPORT_ROUTE) }
             )
         }

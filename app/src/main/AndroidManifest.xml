@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
     <application
         android:name=".MindLessApp"
         android:allowBackup="true"
         android:label="MindLess Screen"
         android:supportsRtl="true"
-        android:theme="@android:style/Theme.DeviceDefault.DayNight.NoActionBar">
+        android:theme="@style/Theme.MindLessScreen">
         <activity
             android:name=".MainActivity"
             android:exported="true">
