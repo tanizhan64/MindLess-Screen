@@ -3,6 +3,7 @@ package com.mindless.screen
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import com.mindless.screen.domain.model.PermissionCapability
 import org.junit.Rule
 import org.junit.Test
@@ -45,5 +46,10 @@ class DashboardUiTest {
         composeRule.onNodeWithText("Screen Time Today").assertExists()
         composeRule.onNodeWithText("Addiction Score").assertExists()
         composeRule.onNodeWithText("Unlock Count").assertExists()
+
+        composeRule.onNodeWithText("View Reports").performClick()
+        composeRule.onNodeWithText("Daily Report").assertExists()
+        composeRule.onNodeWithText("Total Screen Time:", substring = true).assertExists()
+        composeRule.onNodeWithText("Focus Time:", substring = true).assertExists()
     }
 }

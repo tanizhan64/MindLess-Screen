@@ -18,6 +18,8 @@ import androidx.compose.ui.unit.dp
 fun DashboardScreen(
     uiState: DashboardUiState,
     onViewReportsClick: () -> Unit,
+    onOpenInsightsClick: () -> Unit,
+    onOpenProfileClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -47,6 +49,14 @@ fun DashboardScreen(
 
         Button(onClick = onViewReportsClick) {
             Text(text = "View Reports")
+        }
+
+        Button(onClick = onOpenInsightsClick) {
+            Text(text = "View Insights")
+        }
+
+        Button(onClick = onOpenProfileClick) {
+            Text(text = "View Profile")
         }
     }
 }

@@ -7,6 +7,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.mindless.screen.domain.repository.DailySummaryRepository
@@ -20,22 +25,29 @@ data class DailyReportUiState(
 
 @Composable
 fun DailyReportScreen(
+    modifier: Modifier = Modifier,
     dailySummaryRepository: DailySummaryRepository? = null,
-    modifier: Modifier = Modifier
 ) {
-    val uiState = dailySummaryRepository?.latestSummary()?.let { summary ->
-        DailyReportUiState(
+    var uiState by remember {
+        mutableStateOf(
+            DailyReportUiState(
+                totalScreenTimeText = "Total Screen Time: 0m",
+                addictionScoreText = "Addiction Score: 0.0",
+                unlockCountText = "Unlock Count: 0",
+                focusTimeText = "Focus Time: 0m"
+            )
+        )
+    }
+
+    LaunchedEffect(dailySummaryRepository) {
+        val summary = dailySummaryRepository?.latestSummary() ?: return@LaunchedEffect
+        uiState = DailyReportUiState(
             totalScreenTimeText = "Total Screen Time: ${summary.totalScreenTimeMillis / 60_000}m",
             addictionScoreText = "Addiction Score: %.1f".format(summary.addictionScore),
             unlockCountText = "Unlock Count: ${summary.unlockCount}",
             focusTimeText = "Focus Time: ${summary.focusTimeMillis / 60_000}m"
         )
-    } ?: DailyReportUiState(
-        totalScreenTimeText = "Total Screen Time: 0m",
-        addictionScoreText = "Addiction Score: 0.0",
-        unlockCountText = "Unlock Count: 0",
-        focusTimeText = "Focus Time: 0m"
-    )
+    }
 
     Column(
         modifier = modifier

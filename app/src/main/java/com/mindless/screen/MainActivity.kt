@@ -5,7 +5,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.remember
+import androidx.room.Room
+import com.mindless.screen.data.local.AppDatabase
 import com.mindless.screen.data.permission.PermissionRepositoryImpl
+import com.mindless.screen.data.tracking.DailySummaryRepositoryImpl
 import com.mindless.screen.domain.model.PermissionCapability
 import com.mindless.screen.navigation.MindLessNavHost
 import com.mindless.screen.presentation.onboarding.OnboardingViewModel
@@ -31,11 +34,21 @@ class MainActivity : ComponentActivity() {
         val hasBootCompleted = permissionRepository.isGranted(PermissionCapability.RECEIVE_BOOT_COMPLETED)
         val startInOnboarding = !hasUsageAccess || !hasAccessibility || !hasNotifications || !hasBootCompleted
 
+        val appDatabase = Room.databaseBuilder(
+            applicationContext,
+            AppDatabase::class.java,
+            "mindless-screen.db",
+        )
+            .addMigrations(AppDatabase.MIGRATION_1_2)
+            .build()
+        val dailySummaryRepository = DailySummaryRepositoryImpl(appDatabase.aggregateDao())
+
         setContent {
             val onboardingViewModel = remember { OnboardingViewModel(permissionRepository) }
             MindLessNavHost(
                 startInOnboarding = startInOnboarding,
-                onboardingViewModel = onboardingViewModel
+                onboardingViewModel = onboardingViewModel,
+                dailySummaryRepository = dailySummaryRepository,
             )
         }
     }

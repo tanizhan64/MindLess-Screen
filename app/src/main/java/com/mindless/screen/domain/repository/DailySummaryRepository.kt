@@ -8,5 +8,5 @@ data class DailySummary(
 )
 
 interface DailySummaryRepository {
-    fun latestSummary(): DailySummary?
+    suspend fun latestSummary(): DailySummary?
 }

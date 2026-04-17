@@ -5,5 +5,5 @@ import com.mindless.screen.domain.repository.DailySummaryRepository
 class LoadDailySummaryUseCase(
     private val repository: DailySummaryRepository
 ) {
-    operator fun invoke() = repository.latestSummary()
+    suspend operator fun invoke() = repository.latestSummary()
 }

@@ -8,6 +8,8 @@ class BrandingResourceTest {
 
     @Test
     fun launcherBrandingResources_arePresent() {
+        assertNotEquals(0, R.drawable.app_logo)
+        assertNotEquals(0, R.drawable.app_icon)
         assertNotEquals(0, R.drawable.ic_launcher_foreground)
         assertNotEquals(0, R.mipmap.ic_launcher)
         assertNotEquals(0, R.mipmap.ic_launcher_round)

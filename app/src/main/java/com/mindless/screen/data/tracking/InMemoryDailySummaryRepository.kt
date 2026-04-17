@@ -4,7 +4,7 @@ import com.mindless.screen.domain.repository.DailySummary
 import com.mindless.screen.domain.repository.DailySummaryRepository
 
 class InMemoryDailySummaryRepository : DailySummaryRepository {
-    override fun latestSummary(): DailySummary {
+    override suspend fun latestSummary(): DailySummary {
         return DailySummary(
             totalScreenTimeMillis = 7_200_000,
             unlockCount = 42,
