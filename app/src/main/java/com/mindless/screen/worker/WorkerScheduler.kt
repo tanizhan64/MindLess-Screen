@@ -60,5 +60,14 @@ class WorkerScheduler(
             ExistingPeriodicWorkPolicy.UPDATE,
             cleanupRequest
         )
+
+        val dailyAiAnalysisRequest = PeriodicWorkRequestBuilder<DailyAiAnalysisWorker>(24, TimeUnit.HOURS)
+            .setInitialDelay(initialDelayToMidnightMillis, TimeUnit.MILLISECONDS)
+            .build()
+        workManager.enqueueUniquePeriodicWork(
+            "daily_ai_analysis",
+            ExistingPeriodicWorkPolicy.UPDATE,
+            dailyAiAnalysisRequest
+        )
     }
 }
