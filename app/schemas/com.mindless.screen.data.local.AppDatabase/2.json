@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 2,
-    "identityHash": "b57d5a7c48f6d30a97937f174ed82676",
+    "identityHash": "641588ed27d10aeeea26a7ba61abe707",
     "entities": [
       {
         "tableName": "app_usage_records",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `packageName` TEXT NOT NULL, `foregroundMillis` INTEGER NOT NULL, `recordedAtEpochMillis` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `packageName` TEXT NOT NULL, `dateEpochMillis` INTEGER NOT NULL, `totalForegroundMillis` INTEGER NOT NULL, `launchCount` INTEGER NOT NULL, `hourlyBucket` INTEGER NOT NULL, `category` TEXT NOT NULL, `source` TEXT NOT NULL, `confidence` REAL NOT NULL, `wasBackgrounded` INTEGER NOT NULL, `recordedAtEpochMillis` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -21,8 +21,50 @@
             "notNull": true
           },
           {
-            "fieldPath": "foregroundMillis",
-            "columnName": "foregroundMillis",
+            "fieldPath": "dateEpochMillis",
+            "columnName": "dateEpochMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "totalForegroundMillis",
+            "columnName": "totalForegroundMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "launchCount",
+            "columnName": "launchCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hourlyBucket",
+            "columnName": "hourlyBucket",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "category",
+            "columnName": "category",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "source",
+            "columnName": "source",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "confidence",
+            "columnName": "confidence",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "wasBackgrounded",
+            "columnName": "wasBackgrounded",
             "affinity": "INTEGER",
             "notNull": true
           },
@@ -44,7 +86,7 @@
       },
       {
         "tableName": "unlock_events",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `unlockedAtEpochMillis` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `unlockedAtEpochMillis` INTEGER NOT NULL, `source` TEXT NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -56,6 +98,12 @@
             "fieldPath": "unlockedAtEpochMillis",
             "columnName": "unlockedAtEpochMillis",
             "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "source",
+            "columnName": "source",
+            "affinity": "TEXT",
             "notNull": true
           }
         ],
@@ -70,7 +118,7 @@
       },
       {
         "tableName": "session_records",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `sessionStartEpochMillis` INTEGER NOT NULL, `sessionEndEpochMillis` INTEGER)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `startEpochMillis` INTEGER NOT NULL, `endEpochMillis` INTEGER NOT NULL, `durationMillis` INTEGER NOT NULL, `dominantApp` TEXT NOT NULL, `lateNightFlag` INTEGER NOT NULL, `startReason` TEXT NOT NULL, `endReason` TEXT NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -79,16 +127,46 @@
             "notNull": true
           },
           {
-            "fieldPath": "sessionStartEpochMillis",
-            "columnName": "sessionStartEpochMillis",
+            "fieldPath": "startEpochMillis",
+            "columnName": "startEpochMillis",
             "affinity": "INTEGER",
             "notNull": true
           },
           {
-            "fieldPath": "sessionEndEpochMillis",
-            "columnName": "sessionEndEpochMillis",
+            "fieldPath": "endEpochMillis",
+            "columnName": "endEpochMillis",
             "affinity": "INTEGER",
-            "notNull": false
+            "notNull": true
+          },
+          {
+            "fieldPath": "durationMillis",
+            "columnName": "durationMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dominantApp",
+            "columnName": "dominantApp",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lateNightFlag",
+            "columnName": "lateNightFlag",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startReason",
+            "columnName": "startReason",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endReason",
+            "columnName": "endReason",
+            "affinity": "TEXT",
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -102,17 +180,11 @@
       },
       {
         "tableName": "hourly_aggregates",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `hourStartEpochMillis` INTEGER NOT NULL, `totalScreenTimeMillis` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`hourEpochMillis` INTEGER NOT NULL, `totalScreenTimeMillis` INTEGER NOT NULL, `unlockCount` INTEGER NOT NULL, `dominantCategory` TEXT NOT NULL, PRIMARY KEY(`hourEpochMillis`))",
         "fields": [
           {
-            "fieldPath": "id",
-            "columnName": "id",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "hourStartEpochMillis",
-            "columnName": "hourStartEpochMillis",
+            "fieldPath": "hourEpochMillis",
+            "columnName": "hourEpochMillis",
             "affinity": "INTEGER",
             "notNull": true
           },
@@ -121,12 +193,24 @@
             "columnName": "totalScreenTimeMillis",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "unlockCount",
+            "columnName": "unlockCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dominantCategory",
+            "columnName": "dominantCategory",
+            "affinity": "TEXT",
+            "notNull": true
           }
         ],
         "primaryKey": {
-          "autoGenerate": true,
+          "autoGenerate": false,
           "columnNames": [
-            "id"
+            "hourEpochMillis"
           ]
         },
         "indices": [],
@@ -134,17 +218,11 @@
       },
       {
         "tableName": "daily_aggregates",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `dayStartEpochMillis` INTEGER NOT NULL, `totalScreenTimeMillis` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`dayEpochMillis` INTEGER NOT NULL, `totalScreenTimeMillis` INTEGER NOT NULL, `unlockCount` INTEGER NOT NULL, `addictionScore` REAL NOT NULL, `focusTimeMillis` INTEGER NOT NULL, `distractionTimeMillis` INTEGER NOT NULL, PRIMARY KEY(`dayEpochMillis`))",
         "fields": [
           {
-            "fieldPath": "id",
-            "columnName": "id",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "dayStartEpochMillis",
-            "columnName": "dayStartEpochMillis",
+            "fieldPath": "dayEpochMillis",
+            "columnName": "dayEpochMillis",
             "affinity": "INTEGER",
             "notNull": true
           },
@@ -153,12 +231,36 @@
             "columnName": "totalScreenTimeMillis",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "unlockCount",
+            "columnName": "unlockCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "addictionScore",
+            "columnName": "addictionScore",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "focusTimeMillis",
+            "columnName": "focusTimeMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "distractionTimeMillis",
+            "columnName": "distractionTimeMillis",
+            "affinity": "INTEGER",
+            "notNull": true
           }
         ],
         "primaryKey": {
-          "autoGenerate": true,
+          "autoGenerate": false,
           "columnNames": [
-            "id"
+            "dayEpochMillis"
           ]
         },
         "indices": [],
@@ -166,7 +268,7 @@
       },
       {
         "tableName": "app_category_map",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`packageName` TEXT NOT NULL, `category` TEXT NOT NULL, PRIMARY KEY(`packageName`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`packageName` TEXT NOT NULL, `category` TEXT NOT NULL, `confidence` REAL NOT NULL, `source` TEXT NOT NULL, PRIMARY KEY(`packageName`))",
         "fields": [
           {
             "fieldPath": "packageName",
@@ -177,6 +279,18 @@
           {
             "fieldPath": "category",
             "columnName": "category",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "confidence",
+            "columnName": "confidence",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "source",
+            "columnName": "source",
             "affinity": "TEXT",
             "notNull": true
           }
@@ -192,7 +306,7 @@
       },
       {
         "tableName": "analytics_events",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `eventName` TEXT NOT NULL, `timestampEpochMillis` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `eventName` TEXT NOT NULL, `payloadJson` TEXT NOT NULL, `timestampEpochMillis` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -203,6 +317,12 @@
           {
             "fieldPath": "eventName",
             "columnName": "eventName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "payloadJson",
+            "columnName": "payloadJson",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -384,7 +504,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'b57d5a7c48f6d30a97937f174ed82676')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '641588ed27d10aeeea26a7ba61abe707')"
     ]
   }
 }

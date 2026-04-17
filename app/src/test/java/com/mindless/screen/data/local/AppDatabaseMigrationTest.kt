@@ -1,8 +1,19 @@
 package com.mindless.screen.data.local
 
-import android.database.sqlite.SQLiteDatabase
+import android.content.Context
+import androidx.room.Database
 import androidx.room.Room
+import androidx.room.RoomDatabase
+import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.test.core.app.ApplicationProvider
+import com.mindless.screen.data.local.entity.AnalyticsEventEntity
+import com.mindless.screen.data.local.entity.AppCategoryMapEntity
+import com.mindless.screen.data.local.entity.AppUsageRecordEntity
+import com.mindless.screen.data.local.entity.DailyAggregateEntity
+import com.mindless.screen.data.local.entity.HourlyAggregateEntity
+import com.mindless.screen.data.local.entity.SessionRecordEntity
+import com.mindless.screen.data.local.entity.SubscriptionStateEntity
+import com.mindless.screen.data.local.entity.UnlockEventEntity
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -13,7 +24,7 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class AppDatabaseMigrationTest {
 
-    private val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+    private val context = ApplicationProvider.getApplicationContext<Context>()
     private val databaseName = "app-database-migration-test"
 
     @After
@@ -24,19 +35,7 @@ class AppDatabaseMigrationTest {
     @Test
     fun migrationFrom1To2AddsPlan2TablesAndPreservesExistingData() {
         context.deleteDatabase(databaseName)
-        val databaseFile = context.getDatabasePath(databaseName)
-        databaseFile.parentFile?.mkdirs()
-
-        SQLiteDatabase.openOrCreateDatabase(databaseFile, null).use { database ->
-            createVersion1Schema(database)
-            database.execSQL(
-                """
-                INSERT INTO app_usage_records (packageName, foregroundMillis, recordedAtEpochMillis)
-                VALUES ('com.example.app', 180000, 1710000000000)
-                """.trimIndent()
-            )
-            database.setVersion(1)
-        }
+        createVersion1DatabaseWithSampleData()
 
         val migratedRoomDatabase = Room.databaseBuilder(context, AppDatabase::class.java, databaseName)
             .addMigrations(AppDatabase.MIGRATION_1_2)
@@ -49,7 +48,7 @@ class AppDatabaseMigrationTest {
             assertTrue(tableExists(migratedDatabase, "personality_snapshots"))
             assertTrue(tableExists(migratedDatabase, "gamification_states"))
 
-            migratedDatabase.query("SELECT packageName, foregroundMillis FROM app_usage_records")
+            migratedDatabase.query("SELECT packageName, totalForegroundMillis FROM app_usage_records")
                 .use { cursor ->
                     assertTrue(cursor.moveToFirst())
                     assertEquals("com.example.app", cursor.getString(0))
@@ -60,7 +59,42 @@ class AppDatabaseMigrationTest {
         }
     }
 
-    private fun tableExists(database: androidx.sqlite.db.SupportSQLiteDatabase, tableName: String): Boolean {
+    private fun createVersion1DatabaseWithSampleData() {
+        val legacyDatabase = Room.databaseBuilder(context, LegacyV1Database::class.java, databaseName).build()
+        try {
+            legacyDatabase.openHelper.writableDatabase.execSQL(
+                """
+                INSERT INTO app_usage_records (
+                    packageName,
+                    dateEpochMillis,
+                    totalForegroundMillis,
+                    launchCount,
+                    hourlyBucket,
+                    category,
+                    source,
+                    confidence,
+                    wasBackgrounded,
+                    recordedAtEpochMillis
+                ) VALUES (
+                    'com.example.app',
+                    1710000000000,
+                    180000,
+                    3,
+                    10,
+                    'social',
+                    'USAGE_STATS',
+                    0.9,
+                    0,
+                    1710000000000
+                )
+                """.trimIndent()
+            )
+        } finally {
+            legacyDatabase.close()
+        }
+    }
+
+    private fun tableExists(database: SupportSQLiteDatabase, tableName: String): Boolean {
         database.query(
             "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
             arrayOf(tableName)
@@ -68,87 +102,20 @@ class AppDatabaseMigrationTest {
             return cursor.moveToFirst()
         }
     }
-
-    private fun createVersion1Schema(database: SQLiteDatabase) {
-        database.execSQL(
-            """
-            CREATE TABLE IF NOT EXISTS app_usage_records (
-                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                packageName TEXT NOT NULL,
-                foregroundMillis INTEGER NOT NULL,
-                recordedAtEpochMillis INTEGER NOT NULL
-            )
-            """.trimIndent()
-        )
-
-        database.execSQL(
-            """
-            CREATE TABLE IF NOT EXISTS unlock_events (
-                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                unlockedAtEpochMillis INTEGER NOT NULL
-            )
-            """.trimIndent()
-        )
-
-        database.execSQL(
-            """
-            CREATE TABLE IF NOT EXISTS session_records (
-                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                sessionStartEpochMillis INTEGER NOT NULL,
-                sessionEndEpochMillis INTEGER
-            )
-            """.trimIndent()
-        )
-
-        database.execSQL(
-            """
-            CREATE TABLE IF NOT EXISTS hourly_aggregates (
-                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                hourStartEpochMillis INTEGER NOT NULL,
-                totalScreenTimeMillis INTEGER NOT NULL
-            )
-            """.trimIndent()
-        )
-
-        database.execSQL(
-            """
-            CREATE TABLE IF NOT EXISTS daily_aggregates (
-                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                dayStartEpochMillis INTEGER NOT NULL,
-                totalScreenTimeMillis INTEGER NOT NULL
-            )
-            """.trimIndent()
-        )
-
-        database.execSQL(
-            """
-            CREATE TABLE IF NOT EXISTS app_category_map (
-                packageName TEXT NOT NULL,
-                category TEXT NOT NULL,
-                PRIMARY KEY(packageName)
-            )
-            """.trimIndent()
-        )
-
-        database.execSQL(
-            """
-            CREATE TABLE IF NOT EXISTS analytics_events (
-                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                eventName TEXT NOT NULL,
-                timestampEpochMillis INTEGER NOT NULL
-            )
-            """.trimIndent()
-        )
-
-        database.execSQL(
-            """
-            CREATE TABLE IF NOT EXISTS subscription_state (
-                `key` TEXT NOT NULL,
-                isPremium INTEGER NOT NULL,
-                updatedAtEpochMillis INTEGER NOT NULL,
-                PRIMARY KEY(`key`)
-            )
-            """.trimIndent()
-        )
-    }
 }
+
+@Database(
+    entities = [
+        AppUsageRecordEntity::class,
+        UnlockEventEntity::class,
+        SessionRecordEntity::class,
+        HourlyAggregateEntity::class,
+        DailyAggregateEntity::class,
+        AppCategoryMapEntity::class,
+        AnalyticsEventEntity::class,
+        SubscriptionStateEntity::class,
+    ],
+    version = 1,
+    exportSchema = false,
+)
+abstract class LegacyV1Database : RoomDatabase()
