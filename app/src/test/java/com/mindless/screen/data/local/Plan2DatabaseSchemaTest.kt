@@ -3,6 +3,7 @@ package com.mindless.screen.data.local
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -47,5 +48,34 @@ class Plan2DatabaseSchemaTest {
         }
 
         assertTrue(existingTables.containsAll(requiredTables))
+    }
+
+    @Test
+    fun plan2TablesContainExpectedColumns() {
+        assertEquals(
+            setOf("id", "dateEpochMillis", "type", "severity", "message", "recommendation"),
+            tableColumns("insight_records")
+        )
+        assertEquals(
+            setOf("id", "dateEpochMillis", "personalityType", "confidence"),
+            tableColumns("personality_snapshots")
+        )
+        assertEquals(
+            setOf("dateEpochMillis", "streakDays", "focusLevel", "badgesJson"),
+            tableColumns("gamification_states")
+        )
+    }
+
+    private fun tableColumns(tableName: String): Set<String> {
+        val columns = mutableSetOf<String>()
+        val cursor = database.openHelper.writableDatabase.query("PRAGMA table_info($tableName)")
+
+        cursor.use {
+            while (it.moveToNext()) {
+                columns.add(it.getString(it.getColumnIndexOrThrow("name")))
+            }
+        }
+
+        return columns
     }
 }
