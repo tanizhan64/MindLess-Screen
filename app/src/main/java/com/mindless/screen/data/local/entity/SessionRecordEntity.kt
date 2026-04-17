@@ -7,6 +7,11 @@ import androidx.room.PrimaryKey
 data class SessionRecordEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-    val sessionStartEpochMillis: Long,
-    val sessionEndEpochMillis: Long?
+    val startEpochMillis: Long,
+    val endEpochMillis: Long,
+    val durationMillis: Long,
+    val dominantApp: String,
+    val lateNightFlag: Boolean,
+    val startReason: String,
+    val endReason: String
 )

@@ -5,8 +5,11 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "daily_aggregates")
 data class DailyAggregateEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
-    val dayStartEpochMillis: Long,
-    val totalScreenTimeMillis: Long
+    @PrimaryKey
+    val dayEpochMillis: Long,
+    val totalScreenTimeMillis: Long,
+    val unlockCount: Int,
+    val addictionScore: Double,
+    val focusTimeMillis: Long,
+    val distractionTimeMillis: Long
 )

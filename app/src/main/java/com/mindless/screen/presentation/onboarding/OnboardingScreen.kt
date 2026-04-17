@@ -1,5 +1,7 @@
 package com.mindless.screen.presentation.onboarding
 
+import android.content.Intent
+import android.provider.Settings
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -10,6 +12,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.mindless.screen.domain.model.PermissionState
 
@@ -22,6 +25,7 @@ fun OnboardingScreen(
     }
 
     val state by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -33,8 +37,13 @@ fun OnboardingScreen(
         when (state) {
             PermissionState.UsageAccessRequired -> {
                 Button(
-                    onClick = { },
-                    enabled = false
+                    onClick = {
+                        context.startActivity(
+                            Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS).apply {
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                        )
+                    }
                 ) {
                     Text(text = "Enable Usage Access")
                 }

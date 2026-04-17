@@ -7,5 +7,6 @@ import androidx.room.PrimaryKey
 data class UnlockEventEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-    val unlockedAtEpochMillis: Long
+    val unlockedAtEpochMillis: Long,
+    val source: String
 )

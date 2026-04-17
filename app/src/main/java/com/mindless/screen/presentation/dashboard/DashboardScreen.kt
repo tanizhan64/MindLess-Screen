@@ -36,8 +36,11 @@ fun DashboardScreen(
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                Text(text = "Screen Time Today")
                 Text(text = uiState.screenTimeTodayLabel)
+                Text(text = "Addiction Score")
                 Text(text = uiState.addictionScoreLabel)
+                Text(text = "Unlock Count")
                 Text(text = uiState.unlockCountLabel)
             }
         }

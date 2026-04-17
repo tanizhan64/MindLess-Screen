@@ -27,7 +27,7 @@ import com.mindless.screen.data.local.entity.UnlockEventEntity
         SubscriptionStateEntity::class
     ],
     version = 1,
-    exportSchema = false
+    exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun trackingDao(): TrackingDao
