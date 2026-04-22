@@ -8,4 +8,7 @@ import com.mindless.screen.data.local.entity.DailyAggregateEntity
 interface AggregateDao {
     @Query("SELECT * FROM daily_aggregates ORDER BY dayEpochMillis DESC LIMIT 1")
     fun latestDailyAggregate(): DailyAggregateEntity?
+
+    @Query("SELECT * FROM daily_aggregates ORDER BY dayEpochMillis DESC LIMIT :limit")
+    fun latestDailyAggregates(limit: Int): List<DailyAggregateEntity>
 }
