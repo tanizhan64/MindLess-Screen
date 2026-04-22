@@ -25,7 +25,11 @@ class MainActivity : ComponentActivity() {
             context = applicationContext,
             initialGrants = permissionOverrides
         )
-        val startInOnboarding = !permissionRepository.isGranted(PermissionCapability.USAGE_ACCESS)
+        val hasUsageAccess = permissionRepository.isGranted(PermissionCapability.USAGE_ACCESS)
+        val hasAccessibility = permissionRepository.isGranted(PermissionCapability.ACCESSIBILITY_SERVICE)
+        val hasNotifications = permissionRepository.isGranted(PermissionCapability.POST_NOTIFICATIONS)
+        val hasBootCompleted = permissionRepository.isGranted(PermissionCapability.RECEIVE_BOOT_COMPLETED)
+        val startInOnboarding = !hasUsageAccess || !hasAccessibility || !hasNotifications || !hasBootCompleted
 
         setContent {
             val onboardingViewModel = remember { OnboardingViewModel(permissionRepository) }

@@ -8,5 +8,6 @@ data class AnalyticsEventEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val eventName: String,
+    val payloadJson: String,
     val timestampEpochMillis: Long
 )

@@ -7,5 +7,7 @@ import androidx.room.PrimaryKey
 data class AppCategoryMapEntity(
     @PrimaryKey
     val packageName: String,
-    val category: String
+    val category: String,
+    val confidence: Double,
+    val source: String
 )

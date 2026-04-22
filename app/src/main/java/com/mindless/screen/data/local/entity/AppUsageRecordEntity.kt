@@ -8,6 +8,13 @@ data class AppUsageRecordEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val packageName: String,
-    val foregroundMillis: Long,
+    val dateEpochMillis: Long,
+    val totalForegroundMillis: Long,
+    val launchCount: Int,
+    val hourlyBucket: Int,
+    val category: String,
+    val source: String,
+    val confidence: Double,
+    val wasBackgrounded: Boolean,
     val recordedAtEpochMillis: Long
 )
