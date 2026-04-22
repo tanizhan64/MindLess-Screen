@@ -30,4 +30,36 @@ class ComputeGamificationUseCaseTest {
         assertTrue(result.badges.contains("7-day Silver"))
         assertEquals(2, result.focusLevel)
     }
+
+    @Test
+    fun resetsStreakToZero_whenFocusNotCompletedToday() {
+        val result = useCase(
+            previousStreak = 12,
+            completedFocusToday = false
+        )
+
+        assertEquals(0, result.streak)
+    }
+
+    @Test
+    fun addsGoldBadge_whenStreakReachesThirtyDays() {
+        val result = useCase(
+            previousStreak = 29,
+            completedFocusToday = true
+        )
+
+        assertEquals(30, result.streak)
+        assertTrue(result.badges.contains("30-day Gold"))
+    }
+
+    @Test
+    fun addsMasterFocusBadge_whenStreakReachesNinetyDays() {
+        val result = useCase(
+            previousStreak = 89,
+            completedFocusToday = true
+        )
+
+        assertEquals(90, result.streak)
+        assertTrue(result.badges.contains("90-day Master Focus"))
+    }
 }

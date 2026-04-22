@@ -36,6 +36,23 @@ class GenerateSmartInsightsUseCaseTest {
     }
 
     @Test
+    fun emitsLateNightWarning_whenLateNightMinutesAtLeastSixty() {
+        val result = useCase(
+            totalMinutes = 200,
+            unlockCount = 40,
+            socialRatio = 0.25,
+            lateNightMinutes = 60
+        )
+
+        assertTrue(
+            result.any {
+                it.severity == InsightSeverity.WARNING &&
+                    it.message.contains("late-night", ignoreCase = true)
+            }
+        )
+    }
+
+    @Test
     fun emitsFallbackBalanceInsight_whenNoWarningConditionMatches() {
         val result = useCase(
             totalMinutes = 90,
