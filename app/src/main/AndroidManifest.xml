@@ -10,7 +10,7 @@
 
     <application
         android:name=".MindLessApp"
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:label="MindLess Screen"
         android:supportsRtl="true"
         android:theme="@style/Theme.MindLessScreen">
