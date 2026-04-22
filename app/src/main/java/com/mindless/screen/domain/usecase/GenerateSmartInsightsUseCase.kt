@@ -37,7 +37,7 @@ class GenerateSmartInsightsUseCase {
         if (cards.isEmpty()) {
             cards += InsightCard(
                 severity = InsightSeverity.INFO,
-                message = "Your usage looks balanced today. Keep this healthy rhythm going."
+                message = "Your usage looks balanced today at $totalMinutes minutes. Keep this healthy rhythm going."
             )
         }
 
