@@ -14,7 +14,7 @@ class CalculateAddictionScoreUseCase {
                 (0.10 * input.gamingScore) +
                 (0.10 * input.sessionScore)
 
-        val score = (rawScore + 2).toInt().coerceIn(0, 100)
+        val score = rawScore.coerceIn(0.0, 100.0).toInt()
         val band = when (score) {
             in 0..30 -> AddictionRiskBand.HEALTHY
             in 31..60 -> AddictionRiskBand.MODERATE_USAGE

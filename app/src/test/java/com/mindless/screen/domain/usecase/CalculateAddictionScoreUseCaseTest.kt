@@ -22,7 +22,7 @@ class CalculateAddictionScoreUseCaseTest {
             )
         )
 
-        assertEquals(65, result.score)
+        assertEquals(63, result.score)
         assertEquals(AddictionRiskBand.RISK_ZONE, result.band)
     }
 
