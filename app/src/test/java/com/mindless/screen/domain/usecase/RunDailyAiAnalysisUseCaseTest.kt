@@ -5,6 +5,7 @@ import com.mindless.screen.domain.model.InsightCard
 import com.mindless.screen.domain.model.PersonalityClassification
 import com.mindless.screen.domain.repository.AiInsightsRepository
 import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -13,7 +14,7 @@ class RunDailyAiAnalysisUseCaseTest {
 
     @Test
     fun persistsInsightsPersonalityAndGamification_forAnalysisDay() {
-        val repository = FakeAiInsightsRepository()
+        val repository = FakeAiInsightsRepository(initialStreak = 0)
         val useCase = RunDailyAiAnalysisUseCase(
             aiInsightsRepository = repository,
             calculateAddictionScoreUseCase = CalculateAddictionScoreUseCase(),
@@ -23,9 +24,11 @@ class RunDailyAiAnalysisUseCaseTest {
             computeGamificationUseCase = ComputeGamificationUseCase()
         )
 
+        val analysisDay = 1_713_744_000_000L
+
         runBlocking {
             useCase(
-                dayEpochMillis = 1_713_744_000_000L,
+                dayEpochMillis = analysisDay,
                 last7DaysScreenMinutes = listOf(120, 135, 140, 150, 160, 145, 170),
                 unlockCount = 130,
                 socialMinutes = 100,
@@ -39,40 +42,100 @@ class RunDailyAiAnalysisUseCaseTest {
         assertTrue(repository.latestInsightsMessages().isNotEmpty())
         assertNotNull(repository.latestPersonalitySummary())
         assertTrue(repository.gamificationWasSaved)
+        assertEquals(analysisDay, repository.savedDayEpochMillis)
     }
 
-    private class FakeAiInsightsRepository : AiInsightsRepository {
+    @Test
+    fun includesTomorrowPredictionCardInInsights() {
+        val repository = FakeAiInsightsRepository(initialStreak = 0)
+        val useCase = RunDailyAiAnalysisUseCase(
+            aiInsightsRepository = repository,
+            calculateAddictionScoreUseCase = CalculateAddictionScoreUseCase(),
+            predictTomorrowUsageUseCase = PredictTomorrowUsageUseCase(),
+            classifyPersonalityUseCase = ClassifyPersonalityUseCase(),
+            generateSmartInsightsUseCase = GenerateSmartInsightsUseCase(),
+            computeGamificationUseCase = ComputeGamificationUseCase()
+        )
+
+        runBlocking {
+            useCase(
+                dayEpochMillis = 1_713_744_000_000L,
+                last7DaysScreenMinutes = listOf(120, 130, 140, 150, 160, 170, 180),
+                unlockCount = 90,
+                socialMinutes = 50,
+                gamingMinutes = 40,
+                lateNightMinutes = 70,
+                averageSessionMinutes = 10,
+                completedFocusToday = true
+            )
+        }
+
+        val firstMessage = repository.latestInsightsMessages().first()
+        assertTrue(firstMessage.startsWith("Tomorrow forecast:"))
+    }
+
+    @Test
+    fun computesGamificationUsingPreviousStreakFromRepository() {
+        val repository = FakeAiInsightsRepository(initialStreak = 5)
+        val useCase = RunDailyAiAnalysisUseCase(
+            aiInsightsRepository = repository,
+            calculateAddictionScoreUseCase = CalculateAddictionScoreUseCase(),
+            predictTomorrowUsageUseCase = PredictTomorrowUsageUseCase(),
+            classifyPersonalityUseCase = ClassifyPersonalityUseCase(),
+            generateSmartInsightsUseCase = GenerateSmartInsightsUseCase(),
+            computeGamificationUseCase = ComputeGamificationUseCase()
+        )
+
+        runBlocking {
+            useCase(
+                dayEpochMillis = 1_713_744_000_000L,
+                last7DaysScreenMinutes = listOf(100, 100, 100, 100, 100, 100, 100),
+                unlockCount = 20,
+                socialMinutes = 20,
+                gamingMinutes = 10,
+                lateNightMinutes = 0,
+                averageSessionMinutes = 6,
+                completedFocusToday = true
+            )
+        }
+
+        assertEquals(6, repository.lastSavedGamification?.streak)
+    }
+
+
+    private class FakeAiInsightsRepository(
+        private val initialStreak: Int
+    ) : AiInsightsRepository {
         private var insights: List<InsightCard> = emptyList()
         private var personality: PersonalityClassification? = null
         private var gamification: GamificationResult? = null
 
         var gamificationWasSaved: Boolean = false
             private set
+        var savedDayEpochMillis: Long? = null
+            private set
+        var lastSavedGamification: GamificationResult? = null
+            private set
+        var lastSavedPersonality: PersonalityClassification? = null
+            private set
 
-        override suspend fun replaceInsights(
+        override suspend fun saveDailyAnalysis(
             dayEpochMillis: Long,
+            generatedAtEpochMillis: Long,
             cards: List<InsightCard>,
-            generatedAtEpochMillis: Long
+            classification: PersonalityClassification,
+            gamification: GamificationResult
         ) {
             insights = cards
-        }
-
-        override suspend fun savePersonality(
-            dayEpochMillis: Long,
-            classification: PersonalityClassification,
-            generatedAtEpochMillis: Long
-        ) {
             personality = classification
+            this.gamification = gamification
+            gamificationWasSaved = true
+            savedDayEpochMillis = dayEpochMillis
+            lastSavedGamification = gamification
+            lastSavedPersonality = classification
         }
 
-        override suspend fun saveGamification(
-            dayEpochMillis: Long,
-            result: GamificationResult,
-            generatedAtEpochMillis: Long
-        ) {
-            gamification = result
-            gamificationWasSaved = true
-        }
+        override fun currentStreakDays(): Int = initialStreak
 
         override fun latestInsightsMessages(): List<String> = insights.map { it.message }
 

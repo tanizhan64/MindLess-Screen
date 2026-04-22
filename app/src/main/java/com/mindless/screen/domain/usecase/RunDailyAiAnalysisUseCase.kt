@@ -1,8 +1,12 @@
 package com.mindless.screen.domain.usecase
 
+import com.mindless.screen.domain.model.AddictionRiskBand
 import com.mindless.screen.domain.model.AddictionScoreInput
+import com.mindless.screen.domain.model.InsightCard
+import com.mindless.screen.domain.model.InsightSeverity
 import com.mindless.screen.domain.model.PersonalityClassification
 import com.mindless.screen.domain.model.PersonalityType
+import com.mindless.screen.domain.model.TomorrowPrediction
 import com.mindless.screen.domain.repository.AiInsightsRepository
 
 class RunDailyAiAnalysisUseCase(
@@ -41,7 +45,7 @@ class RunDailyAiAnalysisUseCase(
             )
         )
 
-        predictTomorrowUsageUseCase(
+        val tomorrowPrediction = predictTomorrowUsageUseCase(
             last7DaysUsageMinutes = last7DaysScreenMinutes,
             weekendFactorMinutes = socialMinutes + gamingMinutes,
             midnightUsageMinutes = lateNightMinutes,
@@ -56,27 +60,55 @@ class RunDailyAiAnalysisUseCase(
             weekendUsageRatio = 0.0
         )
 
-        val insights = generateSmartInsightsUseCase(
-            totalMinutes = totalMinutes,
-            unlockCount = unlockCount,
-            socialRatio = socialRatio,
-            lateNightMinutes = lateNightMinutes
+        val insights = buildInsights(
+            baseInsights = generateSmartInsightsUseCase(
+                totalMinutes = totalMinutes,
+                unlockCount = unlockCount,
+                socialRatio = socialRatio,
+                lateNightMinutes = lateNightMinutes
+            ),
+            prediction = tomorrowPrediction,
+            riskBand = addictionResult.band
         )
 
+        val previousStreak = aiInsightsRepository.currentStreakDays()
         val gamification = computeGamificationUseCase(
-            previousStreak = 0,
+            previousStreak = previousStreak,
             completedFocusToday = completedFocusToday
         )
 
         val generatedAtEpochMillis = System.currentTimeMillis()
-        aiInsightsRepository.replaceInsights(dayEpochMillis, insights, generatedAtEpochMillis)
-        aiInsightsRepository.savePersonality(dayEpochMillis, personality.ifUnknownUseBalanced(), generatedAtEpochMillis)
-        aiInsightsRepository.saveGamification(dayEpochMillis, gamification, generatedAtEpochMillis)
+        aiInsightsRepository.saveDailyAnalysis(
+            dayEpochMillis = dayEpochMillis,
+            generatedAtEpochMillis = generatedAtEpochMillis,
+            cards = insights,
+            classification = personality.ifUnknownUseBalanced(),
+            gamification = gamification
+        )
     }
 
     private fun ratio(part: Int, total: Int): Double {
         if (total <= 0) return 0.0
         return part.coerceAtLeast(0).toDouble() / total.toDouble()
+    }
+
+    private fun buildInsights(
+        baseInsights: List<InsightCard>,
+        prediction: TomorrowPrediction,
+        riskBand: AddictionRiskBand
+    ): List<InsightCard> {
+        val predictionSeverity = if (riskBand == AddictionRiskBand.HEALTHY) {
+            InsightSeverity.INFO
+        } else {
+            InsightSeverity.WARNING
+        }
+
+        val predictionCard = InsightCard(
+            severity = predictionSeverity,
+            message = "Tomorrow forecast: ${prediction.predictedUsageMinutes} min. ${prediction.suggestion}"
+        )
+
+        return listOf(predictionCard) + baseInsights
     }
 
     private fun PersonalityClassification.ifUnknownUseBalanced(): PersonalityClassification {

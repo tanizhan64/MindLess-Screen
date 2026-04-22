@@ -7,6 +7,7 @@ import androidx.room.PrimaryKey
 data class InsightRecordEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
+    val dayEpochMillis: Long,
     val generatedAtEpochMillis: Long,
     val summary: String,
     val recommendationsJson: String

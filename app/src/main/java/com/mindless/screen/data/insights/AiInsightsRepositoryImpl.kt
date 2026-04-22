@@ -1,5 +1,7 @@
 package com.mindless.screen.data.insights
 
+import androidx.room.RoomDatabase
+import androidx.room.withTransaction
 import com.mindless.screen.data.local.dao.GamificationDao
 import com.mindless.screen.data.local.dao.InsightDao
 import com.mindless.screen.data.local.dao.PersonalityDao
@@ -12,73 +14,63 @@ import com.mindless.screen.domain.model.PersonalityClassification
 import com.mindless.screen.domain.repository.AiInsightsRepository
 
 class AiInsightsRepositoryImpl(
+    private val database: RoomDatabase,
     private val insightDao: InsightDao,
     private val personalityDao: PersonalityDao,
     private val gamificationDao: GamificationDao
 ) : AiInsightsRepository {
 
-    override suspend fun replaceInsights(
+    override suspend fun saveDailyAnalysis(
         dayEpochMillis: Long,
+        generatedAtEpochMillis: Long,
         cards: List<InsightCard>,
-        generatedAtEpochMillis: Long
+        classification: PersonalityClassification,
+        gamification: GamificationResult
     ) {
-        val dayStart = dayEpochMillis
-        val dayEnd = dayEpochMillis + DAY_MILLIS - 1
-        insightDao.deleteByDay(dayStart, dayEnd)
-        val entities = cards.map { card ->
-            InsightRecordEntity(
-                generatedAtEpochMillis = generatedAtEpochMillis,
-                summary = card.message,
-                recommendationsJson = "${card.severity.name}|${card.message}"
+        database.withTransaction {
+            insightDao.deleteByDay(dayEpochMillis)
+            insightDao.insertAll(
+                cards.map { card ->
+                    InsightRecordEntity(
+                        dayEpochMillis = dayEpochMillis,
+                        generatedAtEpochMillis = generatedAtEpochMillis,
+                        summary = card.message,
+                        recommendationsJson = "${card.severity.name}|${card.message}"
+                    )
+                }
+            )
+
+            personalityDao.insertSnapshot(
+                PersonalitySnapshotEntity(
+                    dayEpochMillis = dayEpochMillis,
+                    archetype = classification.type.name,
+                    traitsJson = "confidence=${classification.confidence}",
+                    confidence = classification.confidence,
+                    createdAtEpochMillis = generatedAtEpochMillis
+                )
+            )
+
+            gamificationDao.upsertState(
+                GamificationStateEntity(
+                    level = gamification.focusLevel,
+                    points = gamification.streak * 10,
+                    streakDays = gamification.streak,
+                    badgesCsv = gamification.badges.joinToString(separator = ","),
+                    updatedAtEpochMillis = generatedAtEpochMillis
+                )
             )
         }
-        insightDao.insertAll(entities)
     }
 
-    override suspend fun savePersonality(
-        dayEpochMillis: Long,
-        classification: PersonalityClassification,
-        generatedAtEpochMillis: Long
-    ) {
-        personalityDao.insertSnapshot(
-            PersonalitySnapshotEntity(
-                dayEpochMillis = dayEpochMillis,
-                archetype = classification.type.name,
-                traitsJson = "confidence=${classification.confidence}",
-                confidence = classification.confidence,
-                createdAtEpochMillis = generatedAtEpochMillis
-            )
-        )
-    }
-
-    override suspend fun saveGamification(
-        dayEpochMillis: Long,
-        result: GamificationResult,
-        generatedAtEpochMillis: Long
-    ) {
-        gamificationDao.upsertState(
-            GamificationStateEntity(
-                level = result.focusLevel,
-                points = result.streak * 10,
-                streakDays = result.streak,
-                badgesCsv = result.badges.joinToString(separator = ","),
-                updatedAtEpochMillis = generatedAtEpochMillis
-            )
-        )
+    override fun currentStreakDays(): Int {
+        return gamificationDao.stateByKey()?.streakDays ?: 0
     }
 
     override fun latestInsightsMessages(): List<String> {
-        val records = insightDao.latestInsights()
-        if (records.isEmpty()) return emptyList()
-
-        val latestDayStart = startOfDay(records.first().generatedAtEpochMillis)
-        val latestDayEnd = latestDayStart + DAY_MILLIS - 1
-
-        return records
-            .asSequence()
-            .filter { it.generatedAtEpochMillis in latestDayStart..latestDayEnd }
+        val latestDay = insightDao.latestDayEpochMillis() ?: return emptyList()
+        return insightDao
+            .insightsByDay(latestDay)
             .map { decodeMessage(it) }
-            .toList()
     }
 
     override fun latestPersonalitySummary(): String? {
@@ -94,13 +86,5 @@ class AiInsightsRepositoryImpl(
 
     private fun decodeMessage(record: InsightRecordEntity): String {
         return record.recommendationsJson.substringAfter('|', record.summary)
-    }
-
-    private fun startOfDay(epochMillis: Long): Long {
-        return epochMillis - (epochMillis % DAY_MILLIS)
-    }
-
-    private companion object {
-        const val DAY_MILLIS: Long = 86_400_000L
     }
 }

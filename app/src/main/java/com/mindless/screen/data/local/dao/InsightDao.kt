@@ -11,9 +11,12 @@ interface InsightDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(records: List<InsightRecordEntity>)
 
-    @Query("DELETE FROM insight_records WHERE generatedAtEpochMillis BETWEEN :dayStartEpochMillis AND :dayEndEpochMillis")
-    suspend fun deleteByDay(dayStartEpochMillis: Long, dayEndEpochMillis: Long)
+    @Query("DELETE FROM insight_records WHERE dayEpochMillis = :dayEpochMillis")
+    suspend fun deleteByDay(dayEpochMillis: Long)
 
-    @Query("SELECT * FROM insight_records ORDER BY generatedAtEpochMillis DESC, id DESC")
-    fun latestInsights(): List<InsightRecordEntity>
+    @Query("SELECT * FROM insight_records WHERE dayEpochMillis = :dayEpochMillis ORDER BY id ASC")
+    fun insightsByDay(dayEpochMillis: Long): List<InsightRecordEntity>
+
+    @Query("SELECT dayEpochMillis FROM insight_records ORDER BY dayEpochMillis DESC LIMIT 1")
+    fun latestDayEpochMillis(): Long?
 }

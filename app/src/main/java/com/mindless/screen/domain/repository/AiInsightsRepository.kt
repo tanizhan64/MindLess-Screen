@@ -5,23 +5,15 @@ import com.mindless.screen.domain.model.InsightCard
 import com.mindless.screen.domain.model.PersonalityClassification
 
 interface AiInsightsRepository {
-    suspend fun replaceInsights(
+    suspend fun saveDailyAnalysis(
         dayEpochMillis: Long,
+        generatedAtEpochMillis: Long,
         cards: List<InsightCard>,
-        generatedAtEpochMillis: Long
-    )
-
-    suspend fun savePersonality(
-        dayEpochMillis: Long,
         classification: PersonalityClassification,
-        generatedAtEpochMillis: Long
+        gamification: GamificationResult
     )
 
-    suspend fun saveGamification(
-        dayEpochMillis: Long,
-        result: GamificationResult,
-        generatedAtEpochMillis: Long
-    )
+    fun currentStreakDays(): Int
 
     fun latestInsightsMessages(): List<String>
 
