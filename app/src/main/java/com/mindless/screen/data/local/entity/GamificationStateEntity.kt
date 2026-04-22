@@ -10,5 +10,6 @@ data class GamificationStateEntity(
     val level: Int,
     val points: Int,
     val streakDays: Int,
+    val badgesCsv: String,
     val updatedAtEpochMillis: Long
 )
